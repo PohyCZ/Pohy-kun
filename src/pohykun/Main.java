@@ -1,4 +1,4 @@
-package cz.pohy.ircbot;
+package pohykun;
 
 
 public class Main {

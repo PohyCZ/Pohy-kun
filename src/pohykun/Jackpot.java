@@ -1,4 +1,4 @@
-package cz.pohy.ircbot;
+package pohykun;
 
 import java.util.Random;
 

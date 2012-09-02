@@ -4,7 +4,7 @@
  * @since 2012-08-31
  */
 
-package cz.pohy.ircbot;
+package pohykun;
 
 import java.io.*;
 import java.net.Socket;
