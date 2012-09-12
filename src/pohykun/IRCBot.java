@@ -1,13 +1,8 @@
-/**
- * @author David Pohan <0ronon0@gmail.com>
- * @version 1.0
- * @since 2012-08-31
- */
-
 package pohykun;
 
 import java.io.*;
 import java.net.Socket;
+import static java.lang.System.out;
 
 public class IRCBot {
 	
@@ -48,9 +43,6 @@ public class IRCBot {
 	private String line = null;
 	
 	private Jackpot jackpot;
-	
-	private Logger logger;
-	private String currentChannel;
 
 	IRCBot( String server, int port, String nick, String name, String commandPrefix ) {
 		this.server = server;
@@ -60,15 +52,6 @@ public class IRCBot {
 		this.commandPrefix = commandPrefix;
 		
 		jackpot = new Jackpot();
-		
-		logger = new Logger();
-		
-		try {
-			//fstream = new FileWriter( "log" );
-			//out = new BufferedWriter( fstream );
-		} catch( Exception e ) {
-			e.printStackTrace();
-		}
 		
 		initialize();
 	}
@@ -100,7 +83,8 @@ public class IRCBot {
 	private void send_data( String cmd, String msg ) {
 		try {
 			writer.write( cmd + " " + msg + "\r\n" );
-			System.out.println( cmd + " " + msg );
+			out.println( "Sent data to server: " + cmd + " " + msg );
+			writer.flush();
 		} catch( IOException e ) {
 			e.printStackTrace();
 		}
@@ -109,78 +93,63 @@ public class IRCBot {
 	private void send_data( String cmd ) {
 		try {
 			writer.write( cmd + "\r\n" );
-			System.out.println( cmd );
+			out.println( cmd );
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 	
-//	private void command( String clientCmd, String serverCmd, String[] tmp ) {
-//		if( tmp[1].equals( commandPrefix + clientCmd ) ) {
-//			System.out.println( ">>" + clientCmd );
-//			send_data( serverCmd );
-//		}
-//	}
-	
-	private void command( String clientCmd, String serverCmd, String user, String[] tmp ) {
-		if( tmp[1].equals( commandPrefix + clientCmd ) && tmp[0].substring( 1, tmp[0].indexOf( "!" ) ).equals( user ) ) {
-			System.out.println( ">>" + clientCmd );
-			send_data( serverCmd );
-		}
-	}
-	
-	private void commandChan( String clientCmd, String serverCmd, String msg, String[] tmp ) {
-		if( tmp[1].equals( commandPrefix + clientCmd ) ) {
-			System.out.println( ">>" + clientCmd + ": " + msg );
-			send_data( serverCmd, tmp[0].substring( tmp[0].indexOf( "#" ) ) + " :" + msg );
-		}
-	}
-	
-	private void commandUser( String clientCmd, String serverCmd, String msg, String[] tmp ) {
-		if( tmp[1].equals( commandPrefix + clientCmd ) ) {
-			System.out.println( ">>" + clientCmd + ": " + msg );
-			send_data( serverCmd, tmp[0].substring( tmp[0].indexOf( "#" ) ) + " :" + tmp[0].substring( 1, tmp[0].indexOf( "!" ) ) + ": " + msg );
-		}
-	}
-	
 	private void main() {
 	    try {
-	        writer.flush();
 	
 			while ( (line = reader.readLine()) != null ) {
-				
-	            if ( line.toLowerCase().startsWith( "PING ") ) {
-	                writer.write("PONG " + line.substring(5) + "\r\n");
-	                writer.flush( );
+	            
+	            out.println( line );
+	            
+	            String[] lineSplit = line.split( " " );
+	            String user;
+	            if( lineSplit[0].indexOf( "!" ) > 1 ) {
+            		user = lineSplit[0].substring( 1, lineSplit[0].indexOf( "!" ) );
+            	} else {
+            		user = "";
+            	}
+	            
+	            if( lineSplit[0].equals( "PING" ) ) {
+	            	send_data( "PONG", lineSplit[1] );
 	            }
 	            
-	            System.out.println( line );
-	            
-	            String[] tmp =  line.split( " :" );
-	            if ( tmp.length > 1 ) {
-	            	String[] args = tmp[1].split( " " );
-	            	
-	            	command( "quit", "QUIT", "Pohy", tmp );
-	            	
-	            	commandChan( "hlaska", "PRIVMSG", "Java powa, smradi!", tmp );
-	            	
-	            	commandUser( "jackpot", "PRIVMSG", jackpot.play(), tmp );
-	            	
-					String join = "join";
-					if( args[0].equals( commandPrefix + join ) && args[1].length() >= 1 ) {
-				        	join_channel( args[1] );
-				        	System.out.println( ">>Joining " + args[1] );
-					}
-					
-					//logger.log( line + "\n", tmp[0].substring( tmp[0].indexOf( "#" ) ) );
-					
-					writer.flush();
-				}
+	            if( lineSplit.length > 3 ) {
+	            	if( lineSplit[3].length() > 1 && lineSplit[3].substring( 1, 2 ).equals( commandPrefix ) ) {
+		            	switch( lineSplit[3].substring( 2, lineSplit[3].length() ) ) {
+		            	case "join":
+		            		if( lineSplit.length > 4 ) {
+		            			join_channel( lineSplit[4] );
+		            		} else {
+		            			send_data( "PRIVMSG", lineSplit[2] + " :" + user + ": What channel you want me to join?" );
+		            			out.println( "Channel not specified" );
+		            		}
+		            		break;
+		            	case "part":
+		            		if( lineSplit.length > 4 ) {
+		            			send_data( "PART", lineSplit[4] );
+		            		} else {
+		            			send_data( "PART", lineSplit[2] );
+		            		}
+		            		break;
+		            	case "quit":
+		            		send_data( "QUIT", "quit" );
+		            		break;
+		            	case "jackpot":
+		            		send_data( "PRIVMSG", lineSplit[2] + " :" + user + ": " + jackpot.play() );
+		            		break;
+		            	}
+	            	}
+	            }
 	            
 	        }
-			//logger.closeLog();
 	    } catch( Throwable e ) {
 	    	e.printStackTrace();
 	    }
 	}
+	
 }
