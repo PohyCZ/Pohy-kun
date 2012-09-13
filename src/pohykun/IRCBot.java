@@ -15,11 +15,11 @@ public class IRCBot {
 	 */
 	private int port;
 	/**
-	 * Bot nickname
+	 * Bot's nickname
 	 */
 	private String nick;
 	/**
-	 * "Real" name of bot
+	 * "Real" name of the bot
 	 */
 	private String name;
 	private String channel = "#pohycz";
@@ -42,14 +42,20 @@ public class IRCBot {
 	 */
 	private String line = null;
 	
+	private String[] admins;
+	
+	private Logger logger = new Logger();
+	
 	private Jackpot jackpot;
 
-	IRCBot( String server, int port, String nick, String name, String commandPrefix ) {
+	IRCBot( String server, int port, String nick, String name, String commandPrefix, String admins ) {
 		this.server = server;
 		this.port = port;
 		this.nick = nick;
 		this.name = name;
 		this.commandPrefix = commandPrefix;
+		
+		this.admins = admins.split( "," );
 		
 		jackpot = new Jackpot();
 		
@@ -90,6 +96,7 @@ public class IRCBot {
 		}
 	}
 	
+	@SuppressWarnings("unused")
 	private void send_data( String cmd ) {
 		try {
 			writer.write( cmd + "\r\n" );
@@ -103,10 +110,13 @@ public class IRCBot {
 	    try {
 	
 			while ( (line = reader.readLine()) != null ) {
-	            
+				
 	            out.println( line );
 	            
 	            String[] lineSplit = line.split( " " );
+	            
+	            logger.log( lineSplit );
+	            
 	            String user;
 	            if( lineSplit[0].indexOf( "!" ) > 1 ) {
             		user = lineSplit[0].substring( 1, lineSplit[0].indexOf( "!" ) );
@@ -118,30 +128,42 @@ public class IRCBot {
 	            	send_data( "PONG", lineSplit[1] );
 	            }
 	            
+	            //user commands
 	            if( lineSplit.length > 3 ) {
 	            	if( lineSplit[3].length() > 1 && lineSplit[3].substring( 1, 2 ).equals( commandPrefix ) ) {
 		            	switch( lineSplit[3].substring( 2, lineSplit[3].length() ) ) {
-		            	case "join":
-		            		if( lineSplit.length > 4 ) {
-		            			join_channel( lineSplit[4] );
-		            		} else {
-		            			send_data( "PRIVMSG", lineSplit[2] + " :" + user + ": What channel you want me to join?" );
-		            			out.println( "Channel not specified" );
-		            		}
-		            		break;
-		            	case "part":
-		            		if( lineSplit.length > 4 ) {
-		            			send_data( "PART", lineSplit[4] );
-		            		} else {
-		            			send_data( "PART", lineSplit[2] );
-		            		}
-		            		break;
-		            	case "quit":
-		            		send_data( "QUIT", "quit" );
-		            		break;
 		            	case "jackpot":
 		            		send_data( "PRIVMSG", lineSplit[2] + " :" + user + ": " + jackpot.play() );
 		            		break;
+		            	}
+	            	}
+	            }
+	            
+	            //admin commands
+	            if( lineSplit.length > 3 ) {
+	            	for( int i = 0; i < admins.length; i++ ) {
+		            	if( lineSplit[3].length() > 1 && lineSplit[3].substring( 1, 2 ).equals( commandPrefix ) 
+		            			&& lineSplit[0].length() > 1 && lineSplit[0].substring( 1, lineSplit[0].indexOf( "!" ) ).equals( admins[i] ) ) {
+			            	switch( lineSplit[3].substring( 2, lineSplit[3].length() ) ) {
+			            	case "join":
+			            		if( lineSplit.length > 4 ) {
+			            			join_channel( lineSplit[4] );
+			            		} else {
+			            			send_data( "PRIVMSG", lineSplit[2] + " :" + user + ": What channel you want me to join?" );
+			            			out.println( "Channel not specified" );
+			            		}
+			            		break;
+			            	case "part":
+			            		if( lineSplit.length > 4 ) {
+			            			send_data( "PART", lineSplit[4] );
+			            		} else {
+			            			send_data( "PART", lineSplit[2] );
+			            		}
+			            		break;
+			            	case "quit":
+			            		send_data( "QUIT", "quit" );
+			            		break;
+			            	}
 		            	}
 	            	}
 	            }

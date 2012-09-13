@@ -14,6 +14,14 @@ public class Logger {
 	
 	Logger() {
 		try {
+			
+		} catch ( Exception e ) {
+			e.printStackTrace();
+		}
+	}
+	//:Pohy!0ronon0@pohy.test PRIVMSG #pohycz :!quit hovno prd sracka
+	public void log( String[] lineSplit ) {
+		try {
 			cal = Calendar.getInstance();
 			if( !new File( "logs/" + cal.get( Calendar.YEAR ) + "/" + cal.get( Calendar.MONTH ) ).exists() ) {
 				if( new File( "logs/" + cal.get( Calendar.YEAR ) + "/" + cal.get( Calendar.MONTH ) ).mkdirs() ) {
@@ -23,24 +31,28 @@ public class Logger {
 				fstream = new FileWriter( "logs/" + cal.get( Calendar.YEAR ) + "/" + cal.get( Calendar.MONTH ) + "/" + cal.get( Calendar.DAY_OF_MONTH ) + ".txt", true );
 			}
 			out = new BufferedWriter( fstream );
-		} catch ( Exception e ) {
+			
+			if( lineSplit[0].indexOf( "!" ) >= 1 && message( lineSplit ).length() > 2 ) {
+				out.write(
+						timestamp( ":" ) +
+						" <" + lineSplit[0].substring( 1, lineSplit[0].indexOf( "!" ) ) + "> " + message( lineSplit ).substring( 2 ) + "\n"
+						);
+			}
+			
+			out.close();
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 	
-	public void log( String line, String channel ) {
+	private static String message( String[] lineSplit ) {
+		String msg = "";
 		
-		try {
-			String[] tmp = line.split( " :" );
-			if( tmp[0].indexOf( "!" ) >= 1 ) {
-				out.write(
-						timestamp( ":" ) +
-						" <" + tmp[0].substring( 1, tmp[0].indexOf( "!" ) ) + "> " + tmp[1] + "\n"
-						);
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
+		for( int i = 3; i < lineSplit.length; i++ ) {
+			msg += " " + lineSplit[i];
 		}
+		
+		return msg;
 	}
 	
 	private String timestamp( String separator ) {
