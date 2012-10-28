@@ -8,27 +8,33 @@ import java.util.Calendar;
 
 public class Logger {
 //	private String line = ":Pohy!Pohy@dev.looper PRIVMSG #pohycz :!hlaska";
-	private FileWriter fstream;
-	BufferedWriter out;
-	private Calendar cal;
+	private static FileWriter fstream;
+	static BufferedWriter out;
+	private static Calendar cal;
 	
 	Logger() {
-		try {
-			
-		} catch ( Exception e ) {
-			e.printStackTrace();
-		}
 	}
 	//:Pohy!0ronon0@pohy.test PRIVMSG #pohycz :!quit hovno prd sracka
 	public void log( String[] lineSplit ) {
 		try {
 			cal = Calendar.getInstance();
-			if( !new File( "logs/" + cal.get( Calendar.YEAR ) + "/" + cal.get( Calendar.MONTH ) ).exists() ) {
-				if( new File( "logs/" + cal.get( Calendar.YEAR ) + "/" + cal.get( Calendar.MONTH ) ).mkdirs() ) {
-					fstream = new FileWriter( "logs/" + cal.get( Calendar.YEAR ) + "/" + cal.get( Calendar.MONTH ) + "/" + cal.get( Calendar.DAY_OF_MONTH ) + ".txt", true );
+			if( !new File( "logs/" 
+					+ cal.get( Calendar.YEAR ) 
+					+ "/" + cal.get( Calendar.MONTH ) ).exists() ) {
+				if( new File( "logs/" 
+						+ cal.get( Calendar.YEAR ) 
+						+ "/" + cal.get( Calendar.MONTH ) ).mkdirs() ) {
+					fstream = new FileWriter( "logs/" 
+							+ cal.get( Calendar.YEAR ) + "/" 
+							+ cal.get( Calendar.MONTH ) + "/" 
+							+ cal.get( Calendar.DAY_OF_MONTH ) + ".txt", true );
 				}
 			} else {
-				fstream = new FileWriter( "logs/" + cal.get( Calendar.YEAR ) + "/" + cal.get( Calendar.MONTH ) + "/" + cal.get( Calendar.DAY_OF_MONTH ) + ".txt", true );
+				fstream = new FileWriter( "logs/" 
+						+ cal.get( Calendar.YEAR ) + "/" 
+						+ cal.get( Calendar.MONTH ) + "/" 
+						+ cal.get( Calendar.DAY_OF_MONTH ) 
+						+ ".txt", true );
 			}
 			out = new BufferedWriter( fstream );
 			
@@ -38,6 +44,40 @@ public class Logger {
 						" <" + lineSplit[0].substring( 1, lineSplit[0].indexOf( "!" ) ) + "> " + message( lineSplit ).substring( 2 ) + "\n"
 						);
 			}
+			
+			out.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static void log( String msg, String nick ) {
+		try {
+			cal = Calendar.getInstance();
+			if( !new File( "logs/" 
+					+ cal.get( Calendar.YEAR ) 
+					+ "/" + cal.get( Calendar.MONTH ) ).exists() ) {
+				if( new File( "logs/" 
+						+ cal.get( Calendar.YEAR ) 
+						+ "/" + cal.get( Calendar.MONTH ) ).mkdirs() ) {
+					fstream = new FileWriter( "logs/" 
+							+ cal.get( Calendar.YEAR ) + "/" 
+							+ cal.get( Calendar.MONTH ) + "/" 
+							+ cal.get( Calendar.DAY_OF_MONTH ) + ".txt", true );
+				}
+			} else {
+				fstream = new FileWriter( "logs/" 
+						+ cal.get( Calendar.YEAR ) + "/" 
+						+ cal.get( Calendar.MONTH ) + "/" 
+						+ cal.get( Calendar.DAY_OF_MONTH ) 
+						+ ".txt", true );
+			}
+			out = new BufferedWriter( fstream );
+			
+			out.write(
+					timestamp( ":" ) +
+					" <" + nick + "> " + msg + "\n"
+					);
 			
 			out.close();
 		} catch (IOException e) {
@@ -55,7 +95,7 @@ public class Logger {
 		return msg;
 	}
 	
-	private String timestamp( String separator ) {
+	private static String timestamp( String separator ) {
 		int hour = cal.get( Calendar.HOUR_OF_DAY );
 		int minute = cal.get( Calendar.MINUTE );
 		int second = cal.get( Calendar.SECOND );

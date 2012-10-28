@@ -12,14 +12,9 @@ import java.util.Properties;
 
 
 public class Main {
-
-//    private static String server = "127.0.0.1";
-//    private static int port = 6669;
-//	private static String server = "irc.rizon.net";
-//	private static int port = 6667;
-//    private static String nick = "Pohy-kun";
-//    private static String name = "PohyBot";
-//    private static String commandPrefix = "!";
+	
+	@SuppressWarnings("unused")
+	private static IRCBot IrcBot;
 	
 	private static String 	server,
 							nick,
@@ -27,8 +22,8 @@ public class Main {
 							commandPrefix,
 							admins;
 	private static int 		port;
-	
-    public static void main(String[] args) {
+    
+    Main() {
     	try ( FileReader reader = new FileReader( "pohykun.conf" ) ) {
     		Properties configFile = new Properties();
 			configFile.load( reader );
@@ -40,10 +35,14 @@ public class Main {
 			commandPrefix = configFile.getProperty( "commandPrefix" );
 			admins = configFile.getProperty( "admins" );
 		
-			@SuppressWarnings("unused")
-			IRCBot IrcBot = new IRCBot( server, port, nick, name, commandPrefix, admins );
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+    	
+    	IrcBot = new IRCBot( server, port, nick, name, commandPrefix, admins );
+    }
+    
+    public static void main(String[] args) {
+		new Main();	
     }
 }

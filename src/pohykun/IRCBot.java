@@ -6,6 +6,8 @@ import static java.lang.System.out;
 
 public class IRCBot {
 	
+	private static Socket socket;
+	
 	/**
 	 * Server to connect to
 	 */
@@ -42,6 +44,8 @@ public class IRCBot {
 	 */
 	private String line = null;
 	
+	private String[] lineSplit = { "", "", "", "" };
+	
 	private String[] admins;
 	
 	private Logger logger = new Logger();
@@ -64,7 +68,7 @@ public class IRCBot {
 	
 	private void initialize() {
 		try {
-			Socket socket = new Socket( server, port );
+			socket = new Socket( server, port );
 	        writer = new BufferedWriter( new OutputStreamWriter( socket.getOutputStream(), "UTF-8" ) );
 	        reader = new BufferedReader( new InputStreamReader( socket.getInputStream(), "UTF-8" ) );
 	        
@@ -90,6 +94,11 @@ public class IRCBot {
 		try {
 			writer.write( cmd + " " + msg + "\r\n" );
 			out.println( "Sent data to server: " + cmd + " " + msg );
+			
+			if( lineSplit.length > 1 && lineSplit[1].equals( "PRIVMSG" ) ) {
+				Logger.log( msg, nick );
+			}
+			
 			writer.flush();
 		} catch( IOException e ) {
 			e.printStackTrace();
@@ -106,14 +115,23 @@ public class IRCBot {
 		}
 	}
 	
+	private void quit() {
+		//tady se zapise do configu, etc..
+		send_data( "QUIT", "quit" );
+	}
+	
+	public String getLine() {
+		return line;
+	}
+	
 	private void main() {
 	    try {
 	
-			while ( (line = reader.readLine()) != null ) {
+			while ( ( line = reader.readLine() ) != null ) {
 				
 	            out.println( line );
 	            
-	            String[] lineSplit = line.split( " " );
+	            lineSplit = line.split( " " );
 	            
 	            logger.log( lineSplit );
 	            
@@ -133,7 +151,7 @@ public class IRCBot {
 	            	if( lineSplit[3].length() > 1 && lineSplit[3].substring( 1, 2 ).equals( commandPrefix ) ) {
 		            	switch( lineSplit[3].substring( 2, lineSplit[3].length() ) ) {
 		            	case "jackpot":
-		            		send_data( "PRIVMSG", lineSplit[2] + " :" + user + ": " + jackpot.play() );
+		            		send_data( "PRIVMSG", lineSplit[2] + " :" + user + ": " + jackpot.play( user ) );
 		            		break;
 		            	}
 	            	}
@@ -161,7 +179,7 @@ public class IRCBot {
 			            		}
 			            		break;
 			            	case "quit":
-			            		send_data( "QUIT", "quit" );
+			            		quit();
 			            		break;
 			            	}
 		            	}
@@ -169,6 +187,8 @@ public class IRCBot {
 	            }
 	            
 	        }
+			
+			socket.close();
 	    } catch( Throwable e ) {
 	    	e.printStackTrace();
 	    }
